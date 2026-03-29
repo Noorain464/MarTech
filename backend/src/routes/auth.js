@@ -35,7 +35,6 @@ router.post('/signup', async (req, res) => {
       res.status(201).json({
         _id: user.id,
         email: user.email,
-        isOnboarded: user.isOnboarded,
         token: generateToken(user._id),
       });
     } else {
@@ -58,67 +57,10 @@ router.post('/signin', async (req, res) => {
       res.json({
         _id: user.id,
         email: user.email,
-        isOnboarded: user.isOnboarded,
-        onboardingData: user.onboardingData,
         token: generateToken(user._id),
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   POST /api/auth/onboarding
-router.post('/onboarding', protect, async (req, res) => {
-  try {
-    // req.user comes from the protect middleware
-    const user = await User.findById(req.user.id);
-    
-    if (user) {
-      user.onboardingData = req.body;
-      user.isOnboarded = true;
-      const updatedUser = await user.save();
-      
-      res.json({
-        _id: updatedUser.id,
-        email: updatedUser.email,
-        isOnboarded: updatedUser.isOnboarded,
-        onboardingData: updatedUser.onboardingData,
-        token: generateToken(updatedUser._id),
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ message: 'Server error' });
-  }
-});
-
-// @route   POST /api/auth/profile
-router.post('/profile', protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user.id);
-    
-    if (user) {
-      user.extendedProfileData = req.body;
-      user.isProfileComplete = true;
-      const updatedUser = await user.save();
-      
-      res.json({
-        _id: updatedUser.id,
-        email: updatedUser.email,
-        isOnboarded: updatedUser.isOnboarded,
-        isProfileComplete: updatedUser.isProfileComplete,
-        onboardingData: updatedUser.onboardingData,
-        extendedProfileData: updatedUser.extendedProfileData,
-        token: generateToken(updatedUser._id),
-      });
-    } else {
-      res.status(404).json({ message: 'User not found' });
     }
   } catch (error) {
     console.error(error);
