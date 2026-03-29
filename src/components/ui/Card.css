@@ -1,0 +1,16 @@
+.card {
+  background-color: var(--card-bg);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  padding: 3rem;
+  width: 100%;
+  max-width: 600px;
+  animation: fadeIn 0.5s ease-out forwards;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 640px) {
+  .card { padding: 2rem; border-radius: var(--radius-lg); }
+}
