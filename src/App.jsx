@@ -17,11 +17,6 @@ const ProtectedRoute = ({ children }) => {
   
   if (!isAuthenticated) return <Navigate to="/signin" />;
   
-  // If authenticated but not onboarded, force them to onboarding
-  if (!user?.isOnboarded && window.location.pathname !== '/onboarding') {
-    return <Navigate to="/onboarding" />;
-  }
-
   return children;
 };
 

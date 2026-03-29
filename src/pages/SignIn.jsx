@@ -35,7 +35,7 @@ const SignIn = () => {
       if (data.isOnboarded) {
         navigate('/dashboard');
       } else {
-        navigate('/onboarding');
+        navigate('/dashboard');
       }
     } catch (err) {
       setError(err.message);

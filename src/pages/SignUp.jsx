@@ -32,7 +32,7 @@ const SignUp = () => {
       }
 
       login(data);
-      navigate('/onboarding');
+      navigate('/dashboard');
     } catch (err) {
       setError(err.message);
     } finally {

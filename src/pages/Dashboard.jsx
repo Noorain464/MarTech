@@ -69,7 +69,7 @@ const Dashboard = () => {
             
             {/* Service card */}
             <div 
-              onClick={() => navigate('/profile-setup')}
+              onClick={() => alert('This service is not yet available in the demo.')}
               style={{ 
                 backgroundColor: '#ffffff', borderRadius: 'var(--radius-xl)', padding: '2.5rem', 
                 border: '1px solid var(--border-color)', boxShadow: 'var(--shadow-sm)',
@@ -97,7 +97,7 @@ const Dashboard = () => {
                 </p>
               </div>
               <div style={{ marginTop: 'auto', paddingTop: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', color: 'var(--primary-color)', fontWeight: '600', fontSize: '0.95rem' }}>
-                Get Started &rarr;
+                Coming Soon &rarr;
               </div>
             </div>
 
