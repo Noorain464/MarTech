@@ -18,6 +18,7 @@ app.use(cors({
     credentials: true,
 }));
 app.use(express.json());
+app.options("*", cors());
 
 // Database connection
 mongoose.connect(process.env.MONGO_URI)
