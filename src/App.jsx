@@ -8,6 +8,7 @@ import SignIn from './pages/SignIn';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import ProfileSetup from './pages/ProfileSetup';
+import Home from './pages/Home';
 
 import './App.css';
 
@@ -29,7 +30,7 @@ const App = () => {
     <Router>
       <div className="app-container">
         <Routes>
-          <Route path="/" element={<Navigate to="/signup" />} />
+          <Route path="/" element={<Home />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/signin" element={<SignIn />} />
           <Route 
