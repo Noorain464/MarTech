@@ -22,6 +22,25 @@ const userSchema = new mongoose.Schema({
     businessType: String,
     teamSize: String,
     referralSource: String
+  },
+  isProfileComplete: {
+    type: Boolean,
+    default: false
+  },
+  extendedProfileData: {
+    companyWebsite: String,
+    industry: String,
+    companySize: String,
+    channels: [String],
+    cms: String,
+    analyticsTool: String,
+    crm: String,
+    websiteTraffic: String,
+    outcomes: [String],
+    painPoint: String,
+    targetCustomer: String,
+    targetCompanySize: String,
+    buyerPersonas: String
   }
 }, { timestamps: true });
 

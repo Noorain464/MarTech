@@ -28,6 +28,19 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
+  const updateExtendedProfile = (extendedProfileData) => {
+    const updatedUser = { ...user, extendedProfileData, isProfileComplete: true };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
+  const skipExtendedProfile = () => {
+    // We let them go to dashboard but isProfileComplete remains false/undefined
+    const updatedUser = { ...user, isProfileComplete: false };
+    setUser(updatedUser);
+    localStorage.setItem('user', JSON.stringify(updatedUser));
+  };
+
   const logout = () => {
     setUser(null);
     localStorage.removeItem('user');
@@ -37,6 +50,8 @@ export const AuthProvider = ({ children }) => {
     user,
     login,
     updateOnboarding,
+    updateExtendedProfile,
+    skipExtendedProfile,
     logout,
     isAuthenticated: !!user,
   };

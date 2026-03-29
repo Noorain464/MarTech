@@ -7,6 +7,7 @@ import SignUp from './pages/SignUp';
 import SignIn from './pages/SignIn';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
+import ProfileSetup from './pages/ProfileSetup';
 
 import './App.css';
 
@@ -16,7 +17,6 @@ const ProtectedRoute = ({ children }) => {
   if (!isAuthenticated) return <Navigate to="/signin" />;
   
   // If authenticated but not onboarded, force them to onboarding
-  // UNLESS they are already on the onboarding page
   if (!user?.isOnboarded && window.location.pathname !== '/onboarding') {
     return <Navigate to="/onboarding" />;
   }
@@ -37,6 +37,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Onboarding />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile-setup" 
+            element={
+              <ProtectedRoute>
+                <ProfileSetup />
               </ProtectedRoute>
             } 
           />

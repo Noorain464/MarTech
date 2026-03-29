@@ -98,4 +98,32 @@ router.post('/onboarding', protect, async (req, res) => {
   }
 });
 
+// @route   POST /api/auth/profile
+router.post('/profile', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    
+    if (user) {
+      user.extendedProfileData = req.body;
+      user.isProfileComplete = true;
+      const updatedUser = await user.save();
+      
+      res.json({
+        _id: updatedUser.id,
+        email: updatedUser.email,
+        isOnboarded: updatedUser.isOnboarded,
+        isProfileComplete: updatedUser.isProfileComplete,
+        onboardingData: updatedUser.onboardingData,
+        extendedProfileData: updatedUser.extendedProfileData,
+        token: generateToken(updatedUser._id),
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 export default router;
