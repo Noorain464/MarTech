@@ -115,7 +115,7 @@ const Onboarding = () => {
   const finishOnboarding = async () => {
     setSaving(true);
     try {
-      const res = await fetch('http://https://martech-1.onrender.com/api/auth/onboarding', {
+      const res = await fetch('https://martech-1.onrender.com/api/auth/onboarding', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
