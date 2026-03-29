@@ -19,7 +19,7 @@ const SignUp = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5001/api/auth/signup', {
+      const res = await fetch('http://https://martech-1.onrender.com/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -49,7 +49,7 @@ const SignUp = () => {
             <Zap size={28} color="#ffffff" fill="#ffffff" /> MarTech
           </div>
         </div>
-        
+
         <div style={{ position: 'relative', zIndex: 10, maxWidth: '440px' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: 600, color: 'white', letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '1.5rem' }}>
             Transform how you orchestrate your marketing toolkit.
@@ -78,22 +78,22 @@ const SignUp = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            <Input 
-              label="Email" 
-              type="email" 
-              id="email" 
+            <Input
+              label="Email"
+              type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
               placeholder="name@company.com"
             />
-            <Input 
-              label="Password" 
-              type="password" 
-              id="password" 
+            <Input
+              label="Password"
+              type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
               placeholder="Create a strong password"
             />
             <Button type="submit" variant="primary" size="lg" style={{ width: '100%', marginTop: '0.5rem' }} disabled={loading}>

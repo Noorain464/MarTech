@@ -19,7 +19,7 @@ const SignIn = () => {
     setLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5001/api/auth/signin', {
+      const res = await fetch('http://https://martech-1.onrender.com/api/auth/signin', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password }),
@@ -53,7 +53,7 @@ const SignIn = () => {
             <Zap size={28} color="var(--primary-color)" fill="var(--primary-color)" /> MarTech
           </div>
         </div>
-        
+
         <div style={{ position: 'relative', zIndex: 10, maxWidth: '440px' }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: 600, letterSpacing: '-0.03em', lineHeight: 1.1, marginBottom: '1.5rem', color: 'var(--text-main)' }}>
             Welcome back to your workspace.
@@ -79,22 +79,22 @@ const SignIn = () => {
           )}
 
           <form onSubmit={handleSubmit}>
-            <Input 
-              label="Email" 
-              type="email" 
-              id="email" 
+            <Input
+              label="Email"
+              type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              required 
+              required
               placeholder="name@company.com"
             />
-            <Input 
-              label="Password" 
-              type="password" 
-              id="password" 
+            <Input
+              label="Password"
+              type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              required 
+              required
               placeholder="Enter your password"
             />
             <Button type="submit" variant="primary" size="lg" style={{ width: '100%', marginTop: '0.5rem' }} disabled={loading}>

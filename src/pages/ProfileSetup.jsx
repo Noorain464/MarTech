@@ -8,8 +8,8 @@ import { Building, Target, Users, Zap } from 'lucide-react';
 
 const MULTI_SELECT_CHANNELS = ["Google Ads", "Meta Ads", "LinkedIn Ads", "SEO / organic", "Email", "Content / blog", "Influencer", "Affiliate"];
 const MULTI_SELECT_OUTCOMES = [
-  "Reduce content production cost", "Scale SEO / organic traffic", "Improve ad ROI", 
-  "Personalise website experience", "Prepare for AI search (AEO)", 
+  "Reduce content production cost", "Scale SEO / organic traffic", "Improve ad ROI",
+  "Personalise website experience", "Prepare for AI search (AEO)",
   "Faster campaign iteration", "Reduce agency dependency"
 ];
 const ProfileSetup = () => {
@@ -55,9 +55,9 @@ const ProfileSetup = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch('http://localhost:5001/api/auth/profile', {
+      const res = await fetch('http://https://martech-1.onrender.com/api/auth/profile', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.token}`
         },
@@ -83,7 +83,7 @@ const ProfileSetup = () => {
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)', padding: '3rem 1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-      
+
       <div style={{ width: '100%', maxWidth: '800px', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: '700', fontSize: '1.25rem' }}>
         <Zap size={24} color="var(--primary-color)" fill="var(--primary-color)" /> MarTech Setup
       </div>
@@ -95,16 +95,16 @@ const ProfileSetup = () => {
         </div>
 
         <form onSubmit={handleSubmit} style={{ padding: '2.5rem' }}>
-          
+
           {/* Section 1: Company */}
           <section style={{ marginBottom: '3rem' }}>
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 600 }}>
               <Building size={20} color="var(--primary-color)" /> Your company
             </h3>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              <Input 
-                label="Company website" 
-                placeholder="https://yourco.com" 
+              <Input
+                label="Company website"
+                placeholder="https://yourco.com"
                 value={formData.companyWebsite}
                 onChange={(e) => handleInputChange('companyWebsite', e.target.value)}
               />
@@ -139,7 +139,7 @@ const ProfileSetup = () => {
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 600 }}>
               <Users size={20} color="var(--primary-color)" /> Your ICP (who are you selling to?)
             </h3>
-            
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
               <div className="input-group" style={{ marginBottom: 0 }}>
                 <label className="input-label">Target customer type</label>
@@ -162,9 +162,9 @@ const ProfileSetup = () => {
             </div>
 
             <div style={{ marginBottom: '2rem' }}>
-               <Input 
-                label="Primary buyer persona titles (comma separated)" 
-                placeholder="e.g. Head of Growth, Content Lead, CMO" 
+              <Input
+                label="Primary buyer persona titles (comma separated)"
+                placeholder="e.g. Head of Growth, Content Lead, CMO"
                 value={formData.buyerPersonas}
                 onChange={(e) => handleInputChange('buyerPersonas', e.target.value)}
               />
@@ -178,13 +178,13 @@ const ProfileSetup = () => {
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 600 }}>
               <Target size={20} color="var(--primary-color)" /> Your marketing setup
             </h3>
-            
+
             <div style={{ marginBottom: '2rem' }}>
               <label className="input-label" style={{ display: 'block', marginBottom: '0.75rem' }}>Channels you currently run (select all)</label>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {MULTI_SELECT_CHANNELS.map(ch => (
-                  <Button 
-                    key={ch} type="button" 
+                  <Button
+                    key={ch} type="button"
                     variant={isSelected('channels', ch) ? 'pill-active' : 'pill'}
                     onClick={() => handleMultiSelect('channels', ch)}
                     style={{ margin: 0 }}
@@ -246,7 +246,7 @@ const ProfileSetup = () => {
             <h3 style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.5rem', fontSize: '1.1rem', fontWeight: 600 }}>
               <Zap size={20} color="var(--primary-color)" /> Your goals with this platform
             </h3>
-            
+
             <div style={{ marginBottom: '2rem' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '0.75rem' }}>
                 <label className="input-label" style={{ margin: 0 }}>Top 3 outcomes you want from us</label>
@@ -254,8 +254,8 @@ const ProfileSetup = () => {
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
                 {MULTI_SELECT_OUTCOMES.map(out => (
-                  <Button 
-                    key={out} type="button" 
+                  <Button
+                    key={out} type="button"
                     variant={isSelected('outcomes', out) ? 'pill-active' : 'pill'}
                     onClick={() => handleMultiSelect('outcomes', out, 3)}
                     style={{ margin: 0 }}
@@ -268,9 +268,9 @@ const ProfileSetup = () => {
 
             <div className="input-group">
               <label className="input-label">What's your biggest pain point right now?</label>
-              <textarea 
-                className="input-field" 
-                rows="3" 
+              <textarea
+                className="input-field"
+                rows="3"
                 placeholder="e.g. We produce content too slowly, can't personalise at scale, ads take too long to iterate..."
                 value={formData.painPoint}
                 onChange={(e) => handleInputChange('painPoint', e.target.value)}
@@ -282,9 +282,9 @@ const ProfileSetup = () => {
 
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4rem' }}>
-            <button 
+            <button
               type="button"
-              onClick={handleSkip} 
+              onClick={handleSkip}
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.95rem', fontWeight: 500, transition: 'color 0.2s', textDecoration: 'underline' }}
               disabled={saving}
               onMouseOver={(e) => e.target.style.color = 'var(--text-main)'}

@@ -12,8 +12,8 @@ const questions = [
     description: "Helps us show you the right modules first.",
     type: 'single',
     options: [
-      "Growth marketer", "Content lead", "Performance marketer", 
-      "Marketing director / CMO", "Founder / CEO", "Developer / tech lead", 
+      "Growth marketer", "Content lead", "Performance marketer",
+      "Marketing director / CMO", "Founder / CEO", "Developer / tech lead",
       "Agency / consultant"
     ]
   },
@@ -23,7 +23,7 @@ const questions = [
     description: "We'll set up your workspace around this goal.",
     type: 'multiple',
     options: [
-      "Scale content output", "Improve SEO / organic", "Improve paid ad ROI", 
+      "Scale content output", "Improve SEO / organic", "Improve paid ad ROI",
       "Personalise website for different audiences", "Prepare for AI search", "All of the above"
     ]
   },
@@ -32,7 +32,7 @@ const questions = [
     question: "What kind of business are you?",
     type: 'single',
     options: [
-      "B2B SaaS", "E-commerce / DTC", "Agency or consultancy", 
+      "B2B SaaS", "E-commerce / DTC", "Agency or consultancy",
       "Media / publisher", "Enterprise / large brand", "Other"
     ]
   },
@@ -50,7 +50,7 @@ const questions = [
     question: "Where did you hear about us?",
     type: 'single',
     options: [
-      "LinkedIn", "A colleague / referral", "Google search", 
+      "LinkedIn", "A colleague / referral", "Google search",
       "Newsletter", "Podcast", "Event / hackathon", "Other"
     ]
   }
@@ -66,7 +66,7 @@ const Onboarding = () => {
     referralSource: ''
   });
   const [saving, setSaving] = useState(false);
-  
+
   const { user, updateOnboarding } = useAuth();
   const navigate = useNavigate();
 
@@ -115,9 +115,9 @@ const Onboarding = () => {
   const finishOnboarding = async () => {
     setSaving(true);
     try {
-      const res = await fetch('http://localhost:5001/api/auth/onboarding', {
+      const res = await fetch('http://https://martech-1.onrender.com/api/auth/onboarding', {
         method: 'POST',
-        headers: { 
+        headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user.token}`
         },
@@ -146,11 +146,11 @@ const Onboarding = () => {
   return (
     <div className="center-content" style={{ backgroundColor: 'var(--bg-color)', backgroundImage: 'radial-gradient(circle at top right, rgba(0,0,0,0.02) 0%, transparent 60%)' }}>
       <Card style={{ padding: '3.5rem', minHeight: '480px', display: 'flex', flexDirection: 'column' }}>
-        
+
         {/* Sleek Progress Bar */}
         <div style={{ marginBottom: '2.5rem' }}>
           <div style={{ width: '100%', height: '4px', backgroundColor: 'var(--border-color)', borderRadius: '2px', overflow: 'hidden' }}>
-            <motion.div 
+            <motion.div
               initial={{ width: 0 }}
               animate={{ width: `${progressPercentage}%` }}
               transition={{ duration: 0.5, ease: 'easeOut' }}
@@ -183,7 +183,7 @@ const Onboarding = () => {
 
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
                 {currentQ.options.map((opt) => (
-                  <Button 
+                  <Button
                     key={opt}
                     variant={isSelected(opt) ? 'pill-active' : 'pill'}
                     onClick={() => handleSelect(opt)}
@@ -199,20 +199,20 @@ const Onboarding = () => {
         {/* Footer Navigation */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '3rem', borderTop: '1px solid var(--border-color)', paddingTop: '1.5rem' }}>
           <div>
-            <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleBack} 
-                disabled={saving || step === 0}
-                style={{ visibility: step > 0 ? 'visible' : 'hidden' }}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleBack}
+              disabled={saving || step === 0}
+              style={{ visibility: step > 0 ? 'visible' : 'hidden' }}
             >
-                &larr; Back
+              &larr; Back
             </Button>
           </div>
-          
+
           <div style={{ display: 'flex', alignItems: 'center', gap: '1.5rem' }}>
-            <button 
-              onClick={handleSkip} 
+            <button
+              onClick={handleSkip}
               style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', fontSize: '0.9rem', fontWeight: 500, transition: 'color 0.2s' }}
               disabled={saving}
               onMouseOver={(e) => e.target.style.color = 'var(--text-main)'}
