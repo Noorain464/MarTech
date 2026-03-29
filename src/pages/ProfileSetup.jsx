@@ -55,7 +55,7 @@ const ProfileSetup = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch('https://martech-1.onrender.com/api/auth/profile', {
+      const res = await fetch('https://martech-7l0n.onrender.com/api/auth/profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
