@@ -79,7 +79,12 @@ CSS SELECTOR RULES:
 - Use :nth-of-type() as a fallback for positional targeting
 - Keep selectors specific enough to be unique but not so fragile they break on minor HTML changes
 
-After fetching the page, think about what a growth marketer selling to different segments (enterprise vs SMB, or different industries) would want to change. Only submit elements that would actually move the needle if swapped.`;
+After fetching the page, think about what a growth marketer selling to different segments (enterprise vs SMB, or different industries) would want to change. Only submit elements that would actually move the needle if swapped.
+
+IMPORTANT:
+- If the HTML you fetched is mostly empty (e.g., just a \`<div id="root"></div>\` because it is a React SPA without Server-Side Rendering), DO NOT try fetching /index.html, /home, or actual JavaScript files.
+- You must always end the analysis by calling the \`submit_elements\` tool exactly once.
+- If no elements are suitable or the page is an empty SPA, call \`submit_elements\` with an empty \`elements\` array. Do NOT keep fetching pages.`;
 
 // ─── Tool executor ────────────────────────────────────────────────────────────
 
@@ -162,6 +167,7 @@ async function runScrapeAgent(url) {
 
     // Add Claude's response to history
     messages.push({ role: 'assistant', content: response.content });
+    console.log(`[Scrape] Turn ${turn} output:`, JSON.stringify(response.content, null, 2));
 
     // Check if Claude called submit_elements — that's our termination signal
     const submitCall = response.content.find(

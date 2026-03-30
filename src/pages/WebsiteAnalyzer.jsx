@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
-
+console.log("API URL:", import.meta.env.VITE_API_URL);
 // ─── Script builders ──────────────────────────────────────────────────────────
 
 function buildHtmlScript(customerId, apiUrl, slots) {
