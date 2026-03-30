@@ -6,8 +6,11 @@ import {
   Globe, MousePointer, Type, AlignLeft, Search,
 } from 'lucide-react';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL;
 console.log("API URL:", import.meta.env.VITE_API_URL);
+if (!API_URL) {
+  throw new Error("VITE_API_URL is not set");
+}
 // ─── Script builders ──────────────────────────────────────────────────────────
 
 function buildHtmlScript(customerId, apiUrl, slots) {
