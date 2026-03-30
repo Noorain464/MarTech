@@ -19,6 +19,8 @@ const allowedOrigins = [
 ];
 
 app.use(cors({
+  origin: ["https://mar-tech-teal.vercel.app", "http://localhost:5173","https://dummy-clone.vercel.app"],
+  credentials: true,
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
