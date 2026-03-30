@@ -305,16 +305,13 @@ const Dashboard = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
             {user?.agentProfile && (
               <>
-                <button
-                  onClick={() => navigate('/variants')}
-                  style={{ fontSize: '0.875rem', color: 'var(--primary-color)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}
-                >
+                <button onClick={() => navigate('/website-analyzer')} style={{ fontSize: '0.875rem', color: 'var(--primary-color)', fontWeight: 600, background: 'none', border: 'none', cursor: 'pointer' }}>
+                  Website Analyzer
+                </button>
+                <button onClick={() => navigate('/variants')} style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer' }}>
                   Variants
                 </button>
-                <button
-                  onClick={() => navigate('/profile-review')}
-                  style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer' }}
-                >
+                <button onClick={() => navigate('/profile-review')} style={{ fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500, background: 'none', border: 'none', cursor: 'pointer' }}>
                   Edit Profile
                 </button>
               </>

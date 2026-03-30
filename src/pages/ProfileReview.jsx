@@ -181,7 +181,7 @@ export default function ProfileReview() {
   // Navigate after save — useEffect is reliable even across re-renders
   useEffect(() => {
     if (!saved || !justSaved.current) return;
-    const timer = setTimeout(() => navigate('/variants'), 1500);
+    const timer = setTimeout(() => navigate('/website-analyzer'), 1500);
     return () => clearTimeout(timer);
   }, [saved, navigate]);
 

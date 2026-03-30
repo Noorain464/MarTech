@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import ProfileSetup from './pages/ProfileSetup';
 import ProfileReview from './pages/ProfileReview';
 import Variants from './pages/Variants';
+import WebsiteAnalyzer from './pages/WebsiteAnalyzer';
 import Home from './pages/Home';
 
 import './App.css';
@@ -51,6 +52,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/website-analyzer"
+            element={
+              <ProtectedRoute>
+                <WebsiteAnalyzer />
               </ProtectedRoute>
             }
           />
