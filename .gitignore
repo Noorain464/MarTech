@@ -22,3 +22,19 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Backend env
+backend/.env
+backend/.env.*
+!backend/.env.example
+
+# Claude / AI tooling
+.claude/
+
+# OS
+.DS_Store
+Thumbs.db

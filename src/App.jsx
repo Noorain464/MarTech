@@ -8,6 +8,8 @@ import SignIn from './pages/SignIn';
 import Onboarding from './pages/Onboarding';
 import Dashboard from './pages/Dashboard';
 import ProfileSetup from './pages/ProfileSetup';
+import ProfileReview from './pages/ProfileReview';
+import Variants from './pages/Variants';
 import Home from './pages/Home';
 
 import './App.css';
@@ -44,13 +46,29 @@ const App = () => {
               </ProtectedRoute>
             } 
           />
-          <Route 
-            path="/dashboard" 
+          <Route
+            path="/dashboard"
             element={
               <ProtectedRoute>
                 <Dashboard />
               </ProtectedRoute>
-            } 
+            }
+          />
+          <Route
+            path="/variants"
+            element={
+              <ProtectedRoute>
+                <Variants />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile-review"
+            element={
+              <ProtectedRoute>
+                <ProfileReview />
+              </ProtectedRoute>
+            }
           />
         </Routes>
       </div>

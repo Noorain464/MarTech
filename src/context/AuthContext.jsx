@@ -28,8 +28,8 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
 
-  const updateExtendedProfile = (extendedProfileData) => {
-    const updatedUser = { ...user, extendedProfileData, isProfileComplete: true };
+  const updateExtendedProfile = (agentProfile) => {
+    const updatedUser = { ...user, agentProfile, isProfileComplete: true };
     setUser(updatedUser);
     localStorage.setItem('user', JSON.stringify(updatedUser));
   };
