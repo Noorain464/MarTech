@@ -58,6 +58,8 @@ router.post('/signin', async (req, res) => {
         _id: user.id,
         email: user.email,
         token: generateToken(user._id),
+        agentProfile: user.agentProfile || null,
+        isProfileComplete: user.isProfileComplete || false,
       });
     } else {
       res.status(401).json({ message: 'Invalid email or password' });

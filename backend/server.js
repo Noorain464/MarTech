@@ -3,6 +3,9 @@ import mongoose from 'mongoose';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import authRoutes from './src/routes/auth.js';
+import agentRoutes from './src/routes/agent.js';
+import generateRoutes from './src/routes/generate.js';
+import variantsRoutes from './src/routes/variants.js';
 
 dotenv.config();
 
@@ -11,11 +14,25 @@ const PORT = process.env.PORT || 5000;
 
 // Middleware
 // Strip accidental trailing slashes from FRONTEND_URL to ensure exact CORS origin matching
-// const originUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').replace(/\/$/, '');
+const allowedOrigins = [
+  "http://localhost:5173",
+  "https://mar-tech-teal.vercel.app"
+];
 
 app.use(cors({
+<<<<<<< HEAD
     origin: ["https://mar-tech-teal.vercel.app", "http://localhost:5173"],
     credentials: true,
+=======
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("CORS not allowed"));
+    }
+  },
+  credentials: true
+>>>>>>> f3efbdc (Setup Agent)
 }));
 app.use(express.json());
 
@@ -26,6 +43,9 @@ mongoose.connect(process.env.MONGO_URI)
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/agent', agentRoutes);
+app.use('/api/generate', generateRoutes);
+app.use('/api/variants', variantsRoutes);
 
 // Base route
 app.get('/', (req, res) => {
