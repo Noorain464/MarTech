@@ -1,5 +1,4 @@
-import dotenv from 'dotenv';
-dotenv.config(); // Must be first — routes read process.env on import
+import 'dotenv/config'; // Must be imported this way in ESM so env vars map before other imports
 
 import express from 'express';
 import mongoose from 'mongoose';
