@@ -27,7 +27,7 @@ app.use(cors({
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error('CORS not allowed'));
+      callback(null, true); // Temporarily allow all origins since the SDK endpoint needs to be public, but let's be explicitly permissive for now
     }
   },
   credentials: true,
