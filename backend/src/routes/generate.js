@@ -47,7 +47,7 @@ router.post('/', protect, async (req, res) => {
       const slotResults = await Promise.all(
         slots.map(async (slot) => {
           const response = await anthropic.messages.create({
-            model: 'claude-sonnet-4-6',
+            model: 'claude-3-5-sonnet-20241022',
             max_tokens: 256,
             messages: [
               {

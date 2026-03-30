@@ -152,7 +152,8 @@ async function runScrapeAgent(url) {
   // Max 5 turns to prevent infinite loops
   for (let turn = 0; turn < 5; turn++) {
     const response = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
+      model: 'claude-3-5-sonnet-20241022',
+      tool_choice: { type: 'any' },
       max_tokens: 4096,
       system: SYSTEM_PROMPT,
       tools: TOOLS,
@@ -187,7 +188,7 @@ async function runScrapeAgent(url) {
 
     // If stop reason is end_turn with no tool call, Claude gave up — shouldn't happen
     if (response.stop_reason === 'end_turn') {
-      throw new Error('Agent finished without submitting elements');
+      console.log("CLAUDE RES:", JSON.stringify(response.content)); throw new Error('Agent finished without submitting elements');
     }
 
     // Execute all tool calls and feed results back
@@ -206,7 +207,7 @@ async function runScrapeAgent(url) {
     messages.push({ role: 'user', content: toolResults });
   }
 
-  throw new Error('Agent did not complete within turn limit');
+  console.log("CLAUDE RES:", JSON.stringify(response.content)); throw new Error('Agent did not complete within turn limit');
 }
 
 // ─── Route ────────────────────────────────────────────────────────────────────
