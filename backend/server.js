@@ -18,6 +18,9 @@ const PORT = process.env.PORT || 5001;
 const allowedOrigins = [
   'http://localhost:5173',
   'https://mar-tech-teal.vercel.app',
+  "http://localhost:5173",
+  "https://mar-tech-teal.vercel.app",
+  "https://dummy-clone.vercel.app"
 ];
 
 app.use(cors({
