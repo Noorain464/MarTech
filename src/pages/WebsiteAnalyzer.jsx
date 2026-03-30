@@ -1,112 +1,110 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Zap, ArrowLeft, Copy, Check, Loader2, Globe, MousePointer, Type, AlignLeft } from 'lucide-react';
+import {
+  Zap, ArrowLeft, Copy, Check, Loader2,
+  Globe, MousePointer, Type, AlignLeft, Search,
+} from 'lucide-react';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-// ─── Script Tag Builder ───────────────────────────────────────────────────────
+// ─── Script builders ──────────────────────────────────────────────────────────
 
-function buildAnalyzerScript(customerId, apiUrl) {
-  return `<script>
+function buildHtmlScript(customerId, apiUrl, slots) {
+  const selectorMap = JSON.stringify(
+    slots.reduce((acc, s) => { acc[s.label] = s.selector; return acc; }, {})
+  );
+  return `<!-- Paste inside <head> on every page you want personalised -->
+<script>
 (function () {
-  var CUSTOMER_ID = '${customerId}';
   var API_URL     = '${apiUrl}';
-  var STORAGE_KEY = 'martech_confirmed_' + CUSTOMER_ID;
-  var confirmed   = localStorage.getItem(STORAGE_KEY);
+  var CUSTOMER_ID = '${customerId}';
+  var SELECTORS   = ${selectorMap};
 
-  if (confirmed) {
-    // ── PERSONALIZATION MODE ──
-    runPersonalization(JSON.parse(confirmed));
-  } else {
-    // ── SCAN MODE ──
-    document.addEventListener('DOMContentLoaded', runScan);
-  }
+  // Hide personalised elements instantly — prevents flash of default content
+  var style = document.createElement('style');
+  style.textContent = Object.values(SELECTORS)
+    .map(function(sel) { return sel + '{opacity:0;transition:opacity 0.25s ease}'; })
+    .join('');
+  document.head.appendChild(style);
 
-  function runScan() {
-    var defs = [
-      { sel: 'h1',                                    type: 'headline' },
-      { sel: 'h2',                                    type: 'subheadline' },
-      { sel: 'h3',                                    type: 'subheadline' },
-      { sel: 'header p, section p, .hero p, main p',  type: 'paragraph' },
-      { sel: 'button, a.btn, a.cta, [class*="cta"], [class*="btn"]', type: 'cta' },
-    ];
-    var elements = [], counters = {};
-    defs.forEach(function (d) {
-      document.querySelectorAll(d.sel).forEach(function (el) {
-        if (elements.length >= 20) return;
-        var text = (el.textContent || '').trim().slice(0, 120);
-        if (text.length < 3) return;
-        var base = 'mt_' + el.tagName.toLowerCase() + '_';
-        counters[base] = (counters[base] || 0) + 1;
-        var id = base + (counters[base] - 1);
-        el.setAttribute('data-martech-id', id);
-        elements.push({ martech_id: id, tag: el.tagName, type: d.type, text_preview: text });
-      });
+  function reveal() {
+    Object.values(SELECTORS).forEach(function (sel) {
+      var el = document.querySelector(sel);
+      if (el) el.style.opacity = '1';
     });
-    fetch(API_URL + '/api/analyze/scan', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer_id: CUSTOMER_ID,
-        page_url:    window.location.href,
-        page_title:  document.title,
-        elements:    elements
-      })
-    }).catch(function () {});
-    showToast(elements.length);
   }
 
-  function showToast(count) {
-    var el = document.createElement('div');
-    el.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:999999;background:#1e293b;color:#f8fafc;padding:12px 18px;border-radius:10px;font-size:13px;font-family:system-ui,sans-serif;box-shadow:0 4px 20px rgba(0,0,0,.3);border-left:3px solid #7c3aed;cursor:default';
-    el.textContent = 'MarTech: ' + count + ' elements found — review in dashboard \u2192';
-    document.body.appendChild(el);
-    setTimeout(function () { el.remove(); }, 7000);
-  }
-
-  function runPersonalization(slots) {
-    var ids = slots.map(function (s) { return s.martech_id; });
-    var style = document.createElement('style');
-    style.textContent = ids.map(function (id) {
-      return '[data-martech-id="' + id + '"]{opacity:0;transition:opacity 0.25s ease}';
-    }).join('');
-    document.head.appendChild(style);
-    var reveal = function () {
-      ids.forEach(function (id) {
-        var el = document.querySelector('[data-martech-id="' + id + '"]');
-        if (el) el.style.opacity = '1';
+  var p = new URLSearchParams(window.location.search);
+  fetch(API_URL + '/api/variants/resolve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      customer_id:  CUSTOMER_ID,
+      utm_campaign: p.get('utm_campaign'),
+      utm_source:   p.get('utm_source'),
+      utm_medium:   p.get('utm_medium'),
+      referrer:     document.referrer,
+    }),
+  })
+  .then(function (r) { return r.json(); })
+  .then(function (data) {
+    if (data.slots) {
+      Object.keys(SELECTORS).forEach(function (label) {
+        if (data.slots[label]) {
+          var el = document.querySelector(SELECTORS[label]);
+          if (el) el.textContent = data.slots[label];
+        }
       });
-    };
-    var p = new URLSearchParams(window.location.search);
-    fetch(API_URL + '/api/variants/resolve', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        customer_id:  CUSTOMER_ID,
-        utm_campaign: p.get('utm_campaign'),
-        utm_source:   p.get('utm_source'),
-        utm_medium:   p.get('utm_medium'),
-        referrer:     document.referrer
-      })
-    })
-    .then(function (r) { return r.json(); })
-    .then(function (data) {
-      if (data.slots) {
-        slots.forEach(function (s) {
-          var el = document.querySelector('[data-martech-id="' + s.martech_id + '"]');
-          if (el && data.slots[s.label]) el.textContent = data.slots[s.label];
-        });
-      }
-      reveal();
-    })
-    .catch(reveal);
-  }
+    }
+    reveal();
+  })
+  .catch(reveal);
 })();
 </script>`.trim();
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+function buildReactHook(customerId, apiUrl, slots) {
+  const selectorMap = JSON.stringify(
+    slots.reduce((acc, s) => { acc[s.label] = s.selector; return acc; }, {}),
+    null, 2
+  );
+  return `// src/hooks/usePersonalization.js
+import { useState, useEffect } from 'react';
+
+const SELECTORS = ${selectorMap};
+
+export function usePersonalization() {
+  const [slots, setSlots] = useState(null);
+
+  useEffect(() => {
+    const p = new URLSearchParams(window.location.search);
+    fetch('${apiUrl}/api/variants/resolve', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        customer_id:  '${customerId}',
+        utm_campaign: p.get('utm_campaign'),
+        utm_source:   p.get('utm_source'),
+        utm_medium:   p.get('utm_medium'),
+        referrer:     document.referrer,
+      }),
+    })
+      .then((r) => r.json())
+      .then((data) => setSlots(data.slots || null))
+      .catch(() => {});
+  }, []);
+
+  // Returns: slot values + the CSS selectors to target
+  return { slots, selectors: SELECTORS };
+}
+
+// Usage in your component:
+// const { slots } = usePersonalization();
+// <h1>{slots?.['Hero Headline'] ?? 'Your default headline'}</h1>`;
+}
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function CopyButton({ text, label = 'Copy' }) {
   const [copied, setCopied] = useState(false);
@@ -121,107 +119,100 @@ function CopyButton({ text, label = 'Copy' }) {
 }
 
 const TYPE_META = {
-  headline:    { icon: Type,         color: '#7c3aed', bg: '#ede9fe', label: 'Headline' },
-  subheadline: { icon: Type,         color: '#0891b2', bg: '#e0f2fe', label: 'Subheadline' },
-  cta:         { icon: MousePointer, color: '#059669', bg: '#d1fae5', label: 'CTA' },
-  paragraph:   { icon: AlignLeft,    color: '#d97706', bg: '#fef3c7', label: 'Paragraph' },
-  nav_cta:     { icon: Globe,        color: '#6366f1', bg: '#e0e7ff', label: 'Nav CTA' },
+  headline:    { Icon: Type,         color: '#7c3aed', bg: '#ede9fe' },
+  subheadline: { Icon: Type,         color: '#0891b2', bg: '#e0f2fe' },
+  cta:         { Icon: MousePointer, color: '#059669', bg: '#d1fae5' },
+  paragraph:   { Icon: AlignLeft,    color: '#d97706', bg: '#fef3c7' },
+  other:       { Icon: Globe,        color: '#64748b', bg: '#f1f5f9' },
 };
 
-function typeMeta(type) {
-  return TYPE_META[type] || { color: '#64748b', bg: '#f1f5f9', label: type };
+function tagMeta(type) { return TYPE_META[type] || TYPE_META.other; }
+
+function CodeBlock({ code }) {
+  return (
+    <div style={{ position: 'relative', marginTop: '0.75rem' }}>
+      <pre style={{ fontSize: '0.72rem', lineHeight: 1.75, color: '#a5f3fc', backgroundColor: '#020617', borderRadius: '8px', padding: '1.25rem', margin: 0, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+        {code}
+      </pre>
+      <div style={{ position: 'absolute', top: '0.75rem', right: '0.75rem' }}>
+        <CopyButton text={code} />
+      </div>
+    </div>
+  );
 }
 
-// ─── WebsiteAnalyzer Page ─────────────────────────────────────────────────────
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function WebsiteAnalyzer() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  // view: 'script' → 'waiting' → 'review' → 'generating'
-  const [view, setView]         = useState('script');
-  const [scan, setScan]         = useState(null);
-  const [elements, setElements] = useState([]);
-  const [pollCount, setPollCount] = useState(0);
-  const [saving, setSaving]     = useState(false);
-  const [filter, setFilter]     = useState('all');
-  const pollRef = useRef(false);
+  // step: 'url' → 'elements' → 'integration'
+  const [step, setStep]           = useState('url');
+  const [url, setUrl]             = useState('');
+  const [scraping, setScraping]   = useState(false);
+  const [scrapeError, setScrapeError] = useState('');
+  const [pageTitle, setPageTitle] = useState('');
+  const [elements, setElements]   = useState([]);
+  const [generating, setGenerating] = useState(false);
+  const [confirmedSlots, setConfirmedSlots] = useState([]);
+  const [integrationTab, setIntegrationTab] = useState('html');
 
-  const scriptTag = buildAnalyzerScript(user?._id, API_URL);
+  const selected = elements.filter(e => e.selected);
 
-  // ── Poll for scan results ──
-  const fetchLatest = useCallback(async () => {
+  // ── Step 1: scrape ──
+  const handleScrape = async () => {
+    if (!url.trim()) return;
+    setScraping(true);
+    setScrapeError('');
     try {
-      const res = await fetch(`${API_URL}/api/analyze/latest`, {
-        headers: { Authorization: `Bearer ${user?.token}` },
-      });
-      const data = await res.json();
-      if (data.scan?.status === 'received' || data.scan?.status === 'confirmed') {
-        setScan(data.scan);
-        setElements(data.scan.elements.map(el => ({ ...el, selected: el.selected ?? false })));
-        setView('review');
-      }
-    } catch { /* silent */ }
-  }, [user?.token]);
-
-  useEffect(() => {
-    if (view !== 'waiting') return;
-    const t = setTimeout(() => { setPollCount(c => c + 1); fetchLatest(); }, 3000);
-    return () => clearTimeout(t);
-  }, [view, pollCount, fetchLatest]);
-
-  // ── Check for existing scan on load (returning user) ──
-  useEffect(() => {
-    if (pollRef.current) return;
-    pollRef.current = true;
-    fetchLatest();
-  }, [fetchLatest]);
-
-  // ── Toggle element selection ──
-  const toggle = (id) =>
-    setElements(prev => prev.map(el => el.martech_id === id ? { ...el, selected: !el.selected } : el));
-
-  const updateLabel = (id, label) =>
-    setElements(prev => prev.map(el => el.martech_id === id ? { ...el, label } : el));
-
-  const selectedElements = elements.filter(e => e.selected);
-
-  // ── Confirm + Generate ──
-  const handleGenerate = async () => {
-    if (!selectedElements.length || !scan) return;
-    setSaving(true);
-    try {
-      // 1. Lock in the selections
-      await fetch(`${API_URL}/api/analyze/${scan._id}/confirm`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body: JSON.stringify({ elements }),
-      });
-
-      // 2. Write confirmed slots to localStorage so script tag switches to personalization mode
-      const confirmedSlots = selectedElements.map(e => ({ martech_id: e.martech_id, label: e.label }));
-      localStorage.setItem(`martech_confirmed_${user?._id}`, JSON.stringify(confirmedSlots));
-
-      // 3. Fire Worker Agent with selected slot labels
-      const slotNames = selectedElements.map(e => e.label);
-      fetch(`${API_URL}/api/generate`, {
+      const res = await fetch(`${API_URL}/api/scrape`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
-        body: JSON.stringify({ profile: user?.agentProfile, slots: slotNames }),
-      }).catch(() => {});
-
-      navigate('/variants');
-    } catch {
-      setSaving(false);
+        body: JSON.stringify({ url: url.trim() }),
+      });
+      const text = await res.text();
+      let data;
+      try { data = JSON.parse(text); } catch { throw new Error(`Server error (${res.status}). Make sure the backend is deployed.`); }
+      if (!res.ok) throw new Error(data.message || 'Failed to scrape');
+      setPageTitle(data.page_title);
+      setElements(data.elements);
+      setStep('elements');
+    } catch (err) {
+      setScrapeError(err.message);
+    } finally {
+      setScraping(false);
     }
   };
 
-  // ── Filtered elements ──
-  const filtered = filter === 'all' ? elements : elements.filter(e => e.type === filter);
-  const types = ['all', ...Array.from(new Set(elements.map(e => e.type)))];
+  // ── Step 2: generate variants for selected elements ──
+  const handleGenerate = async () => {
+    if (!selected.length || !user?.agentProfile) return;
+    setGenerating(true);
+    try {
+      const slotNames = selected.map(e => e.label);
+      // Fire-and-forget — variants page polls for results
+      fetch(`${API_URL}/api/generate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${user?.token}` },
+        body: JSON.stringify({ profile: user.agentProfile, slots: slotNames }),
+      }).catch(() => {});
 
-  // ── Shared styles ──
+      setConfirmedSlots(selected.map(e => ({ label: e.label, selector: e.selector })));
+      setStep('integration');
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  const toggle = (id) => setElements(prev => prev.map(e => e.id === id ? { ...e, selected: !e.selected } : e));
+  const updateLabel = (id, label) => setElements(prev => prev.map(e => e.id === id ? { ...e, label } : e));
+
+  const htmlScript  = step === 'integration' ? buildHtmlScript(user?._id, API_URL, confirmedSlots) : '';
+  const reactScript = step === 'integration' ? buildReactHook(user?._id, API_URL, confirmedSlots) : '';
+
   const card = { backgroundColor: '#fff', border: '1px solid var(--border-color)', borderRadius: '14px', padding: '1.75rem', marginBottom: '1.25rem' };
+  const stepDone = (s) => ({ url: [], elements: ['url'], integration: ['url','elements'] }[step] || []).includes(s);
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--bg-color)' }}>
@@ -231,190 +222,137 @@ export default function WebsiteAnalyzer() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 700, fontSize: '1.25rem', letterSpacing: '-0.025em' }}>
           <Zap size={24} color="var(--primary-color)" fill="var(--primary-color)" /> MarTech
         </div>
-        <button onClick={() => navigate('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500 }}>
-          <ArrowLeft size={16} /> Dashboard
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          {step === 'integration' && (
+            <button onClick={() => navigate('/variants')} style={{ padding: '0.4rem 0.875rem', borderRadius: '8px', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', fontWeight: 600, fontSize: '0.85rem', cursor: 'pointer' }}>
+              View Generated Variants →
+            </button>
+          )}
+          <button onClick={() => navigate('/dashboard')} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.4rem 0.75rem', border: '1px solid var(--border-color)', borderRadius: '8px', background: 'none', cursor: 'pointer', fontSize: '0.875rem', color: 'var(--text-muted)', fontWeight: 500 }}>
+            <ArrowLeft size={16} /> Dashboard
+          </button>
+        </div>
       </nav>
 
       <main style={{ maxWidth: '800px', margin: '0 auto', padding: '3rem 2rem 6rem' }}>
 
         {/* Header */}
-        <header style={{ marginBottom: '2.5rem' }}>
-          <h1 style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text-main)', marginBottom: '0.4rem' }}>
-            Website Analyzer
-          </h1>
+        <header style={{ marginBottom: '2rem' }}>
+          <h1 style={{ fontSize: '2rem', fontWeight: 700, letterSpacing: '-0.03em', color: 'var(--text-main)', marginBottom: '0.4rem' }}>Website Analyzer</h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', lineHeight: 1.6 }}>
-            Paste one script tag on your site. We scan your page and find personalizable elements — you pick which ones get swapped for each audience segment.
+            Enter your website URL. We'll scan it, find personalizable elements, and generate a script that swaps content per visitor segment — no code changes needed on your site.
           </p>
         </header>
 
-        {/* ── Step indicators ── */}
-        <div style={{ display: 'flex', gap: '0', marginBottom: '2.5rem', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
-          {[
-            { id: 'script',     label: '1. Add Script' },
-            { id: 'waiting',    label: '2. Scan Site' },
-            { id: 'review',     label: '3. Pick Elements' },
-          ].map((step, i) => {
-            const isActive = step.id === view || (view === 'generating' && step.id === 'review');
-            const isDone = (
-              (step.id === 'script'  && ['waiting','review','generating'].includes(view)) ||
-              (step.id === 'waiting' && ['review','generating'].includes(view))
-            );
-            return (
-              <div key={step.id} style={{ flex: 1, padding: '0.75rem 1rem', backgroundColor: isActive ? 'var(--primary-color)' : isDone ? '#f0fdf4' : '#fafafa', borderRight: i < 2 ? '1px solid var(--border-color)' : 'none', textAlign: 'center' }}>
-                <span style={{ fontSize: '0.8rem', fontWeight: 700, color: isActive ? '#fff' : isDone ? '#16a34a' : 'var(--text-muted)' }}>
-                  {isDone ? '✓ ' : ''}{step.label}
-                </span>
-              </div>
-            );
-          })}
+        {/* Step progress */}
+        <div style={{ display: 'flex', marginBottom: '2.5rem', borderRadius: '10px', overflow: 'hidden', border: '1px solid var(--border-color)' }}>
+          {[['url','1. Enter URL'],['elements','2. Pick Elements'],['integration','3. Get Script']].map(([s, label], i) => (
+            <div key={s} style={{ flex: 1, padding: '0.75rem', textAlign: 'center', backgroundColor: step === s ? 'var(--primary-color)' : stepDone(s) ? '#f0fdf4' : '#fafafa', borderRight: i < 2 ? '1px solid var(--border-color)' : 'none' }}>
+              <span style={{ fontSize: '0.8rem', fontWeight: 700, color: step === s ? '#fff' : stepDone(s) ? '#16a34a' : 'var(--text-muted)' }}>
+                {stepDone(s) ? '✓ ' : ''}{label}
+              </span>
+            </div>
+          ))}
         </div>
 
-        {/* ══ VIEW: SCRIPT ══ */}
-        {view === 'script' && (
+        {/* ══ STEP 1: URL input ══ */}
+        {step === 'url' && (
           <div style={card}>
-            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.4rem' }}>
-              Step 1 — Add this script to your website
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.5rem', lineHeight: 1.6 }}>
-              Paste it inside <code style={{ backgroundColor: '#f1f5f9', padding: '0.1rem 0.3rem', borderRadius: '4px' }}>&lt;head&gt;</code> on any page you want to personalise. Once pasted, visit that page — we'll detect your elements automatically.
+            <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.4rem' }}>Enter your website URL</h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '1.25rem', lineHeight: 1.6 }}>
+              We'll fetch the page, extract headlines, subheadlines, and CTAs, and let you pick which ones to personalise per audience segment.
             </p>
-
-            {/* Dark script block */}
-            <div style={{ backgroundColor: '#0f172a', borderRadius: '10px', overflow: 'hidden', marginBottom: '1.25rem' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.75rem 1rem', borderBottom: '1px solid #1e293b' }}>
-                <span style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 600 }}>script tag — paste once, works forever</span>
-                <CopyButton text={scriptTag} label="Copy Script" />
-              </div>
-              <pre style={{ fontSize: '0.72rem', lineHeight: 1.75, color: '#a5f3fc', padding: '1.25rem', margin: 0, overflowX: 'auto', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                {scriptTag}
-              </pre>
-            </div>
-
-            {/* How it works */}
-            <div style={{ backgroundColor: '#fafafa', borderRadius: '10px', padding: '1rem 1.25rem', marginBottom: '1.5rem', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
-              <strong style={{ color: 'var(--text-main)' }}>How it works:</strong> The script scans your page for headlines, subheadlines, and CTAs. It sends the list to MarTech — no page content is stored, only element tags and a text preview. After you confirm which elements to personalise, the same script automatically switches to personalisation mode.
-            </div>
 
             <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button
-                onClick={() => { setView('waiting'); fetchLatest(); }}
-                style={{ flex: 1, padding: '0.875rem', backgroundColor: 'var(--primary-color)', color: '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.95rem', cursor: 'pointer' }}
-              >
-                I've pasted it — scan my site →
-              </button>
-              {scan && (
-                <button
-                  onClick={() => setView('review')}
-                  style={{ padding: '0.875rem 1.25rem', border: '1px solid var(--border-color)', borderRadius: '10px', background: '#fff', color: 'var(--text-muted)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer' }}
-                >
-                  View previous scan
-                </button>
-              )}
-            </div>
-          </div>
-        )}
-
-        {/* ══ VIEW: WAITING ══ */}
-        {view === 'waiting' && (
-          <div style={{ ...card, textAlign: 'center', padding: '3.5rem 2rem' }}>
-            <Globe size={40} color="var(--primary-color)" style={{ marginBottom: '1rem' }} />
-            <h2 style={{ fontSize: '1.15rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.5rem' }}>
-              Waiting for your site to be scanned…
-            </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.875rem', marginBottom: '2rem', lineHeight: 1.6, maxWidth: '420px', margin: '0 auto 2rem' }}>
-              Visit the page where you added the script tag. A toast notification will appear confirming the scan. Come back here — this page updates automatically.
-            </p>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem', alignItems: 'center', marginBottom: '2rem' }}>
-              <Loader2 size={18} color="var(--primary-color)" style={{ animation: 'spin 1s linear infinite' }} />
-              <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Polling for scan results…</span>
-            </div>
-            <button
-              onClick={() => setView('script')}
-              style={{ background: 'none', border: 'none', color: 'var(--primary-color)', fontWeight: 600, fontSize: '0.875rem', cursor: 'pointer', textDecoration: 'underline' }}
-            >
-              ← Back to script tag
-            </button>
-          </div>
-        )}
-
-        {/* ══ VIEW: REVIEW ══ */}
-        {view === 'review' && scan && (
-          <>
-            {/* Scan summary */}
-            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '1rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-              <Check size={18} color="#16a34a" />
-              <div>
-                <span style={{ fontSize: '0.875rem', fontWeight: 700, color: '#15803d' }}>Scan received</span>
-                <span style={{ fontSize: '0.85rem', color: '#16a34a', marginLeft: '0.5rem' }}>
-                  {elements.length} elements found on <strong>{scan.page_title || scan.page_url}</strong>
-                </span>
+              <div style={{ flex: 1, position: 'relative' }}>
+                <Globe size={16} style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <input
+                  value={url}
+                  onChange={e => setUrl(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleScrape()}
+                  placeholder="https://yourwebsite.com"
+                  style={{ width: '100%', padding: '0.75rem 0.875rem 0.75rem 2.5rem', border: '1px solid var(--border-color)', borderRadius: '10px', fontSize: '0.95rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', color: 'var(--text-main)' }}
+                />
               </div>
+              <button
+                onClick={handleScrape}
+                disabled={scraping || !url.trim()}
+                style={{ padding: '0.75rem 1.25rem', backgroundColor: scraping || !url.trim() ? '#e2e8f0' : 'var(--primary-color)', color: scraping || !url.trim() ? '#94a3b8' : '#fff', border: 'none', borderRadius: '10px', fontWeight: 700, fontSize: '0.9rem', cursor: scraping || !url.trim() ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', whiteSpace: 'nowrap' }}
+              >
+                {scraping ? <><Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> Scanning…</> : <><Search size={16} /> Scan Site</>}
+              </button>
+            </div>
+
+            {scrapeError && (
+              <div style={{ marginTop: '1rem', padding: '0.75rem 1rem', backgroundColor: '#fff1f2', border: '1px solid #fecdd3', borderRadius: '8px', fontSize: '0.875rem', color: '#be123c' }}>
+                {scrapeError}
+              </div>
+            )}
+
+            <div style={{ marginTop: '1.5rem', padding: '1rem', backgroundColor: '#fafafa', borderRadius: '10px', fontSize: '0.85rem', color: 'var(--text-muted)', lineHeight: 1.7 }}>
+              <strong style={{ color: 'var(--text-main)' }}>What we scan for:</strong> H1/H2/H3 headings, hero paragraphs, CTA buttons and links. We ignore nav, footer, and decorative elements automatically.
+            </div>
+          </div>
+        )}
+
+        {/* ══ STEP 2: Element selection ══ */}
+        {step === 'elements' && (
+          <>
+            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '0.875rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Check size={16} color="#16a34a" />
+              <span style={{ fontSize: '0.875rem', color: '#15803d' }}>
+                <strong>{elements.length} elements</strong> found on <strong>{pageTitle}</strong>
+              </span>
+              <button onClick={() => setStep('url')} style={{ marginLeft: 'auto', background: 'none', border: 'none', color: '#16a34a', fontSize: '0.8rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                Scan different URL
+              </button>
             </div>
 
             <div style={card}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
                 <div>
-                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>
-                    Select elements to personalise
-                  </h2>
+                  <h2 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.25rem' }}>Select elements to personalise</h2>
                   <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                    Check each element you want swapped per audience segment. You can rename it too.
+                    Each selected element gets unique copy per audience segment. You can rename the label — that becomes the slot name in generated copy.
                   </p>
                 </div>
-                <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 700, whiteSpace: 'nowrap', paddingTop: '0.2rem' }}>
-                  {selectedElements.length} selected
+                <span style={{ fontSize: '0.8rem', color: 'var(--primary-color)', fontWeight: 700, flexShrink: 0, paddingTop: '0.2rem' }}>
+                  {selected.length} selected
                 </span>
               </div>
 
-              {/* Type filter tabs */}
-              <div style={{ display: 'flex', gap: '0.4rem', marginBottom: '1.25rem', flexWrap: 'wrap' }}>
-                {types.map(t => {
-                  const meta = t === 'all' ? { label: 'All', color: '#475569', bg: '#f1f5f9' } : typeMeta(t);
-                  const active = filter === t;
-                  return (
-                    <button key={t} onClick={() => setFilter(t)} style={{ padding: '0.3rem 0.75rem', borderRadius: '999px', fontSize: '0.75rem', fontWeight: 700, border: 'none', cursor: 'pointer', backgroundColor: active ? (t === 'all' ? '#1e293b' : meta.color) : meta.bg, color: active ? '#fff' : meta.color, transition: 'all 0.15s' }}>
-                      {meta.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* Element list */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
-                {filtered.map(el => {
-                  const meta = typeMeta(el.type);
-                  const Icon = meta.icon;
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {elements.map(el => {
+                  const { Icon, color, bg } = tagMeta(el.type);
                   return (
                     <div
-                      key={el.martech_id}
-                      onClick={() => toggle(el.martech_id)}
+                      key={el.id}
+                      onClick={() => toggle(el.id)}
                       style={{ display: 'flex', alignItems: 'flex-start', gap: '0.875rem', padding: '0.875rem 1rem', borderRadius: '10px', border: `1px solid ${el.selected ? 'var(--primary-color)' : 'var(--border-color)'}`, backgroundColor: el.selected ? '#faf5ff' : '#fafafa', cursor: 'pointer', transition: 'all 0.15s' }}
                     >
                       {/* Checkbox */}
-                      <div style={{ width: 18, height: 18, borderRadius: '4px', border: `2px solid ${el.selected ? 'var(--primary-color)' : '#cbd5e1'}`, backgroundColor: el.selected ? 'var(--primary-color)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.1rem' }}>
+                      <div style={{ width: 18, height: 18, borderRadius: '4px', border: `2px solid ${el.selected ? 'var(--primary-color)' : '#cbd5e1'}`, backgroundColor: el.selected ? 'var(--primary-color)' : '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.15rem' }}>
                         {el.selected && <Check size={11} color="#fff" strokeWidth={3} />}
                       </div>
 
-                      {/* Type badge */}
-                      <div style={{ flexShrink: 0, marginTop: '0.1rem' }}>
-                        <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.15rem 0.5rem', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700, backgroundColor: meta.bg, color: meta.color }}>
-                          {Icon && <Icon size={10} />}{el.tag}
-                        </span>
-                      </div>
+                      {/* Tag badge */}
+                      <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem', padding: '0.15rem 0.5rem', borderRadius: '999px', fontSize: '0.68rem', fontWeight: 700, backgroundColor: bg, color, flexShrink: 0, marginTop: '0.15rem' }}>
+                        <Icon size={10} />{el.tag}
+                      </span>
 
-                      {/* Text + label input */}
+                      {/* Text + label */}
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <p style={{ fontSize: '0.875rem', color: 'var(--text-main)', margin: '0 0 0.35rem', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {el.text_preview}
                         </p>
+                        <code style={{ fontSize: '0.7rem', color: '#94a3b8', fontFamily: 'monospace' }}>{el.selector}</code>
                         {el.selected && (
                           <input
                             value={el.label}
                             onClick={e => e.stopPropagation()}
-                            onChange={e => updateLabel(el.martech_id, e.target.value)}
-                            placeholder="Label for this slot (e.g. Hero Headline)"
-                            style={{ width: '100%', padding: '0.3rem 0.5rem', fontSize: '0.78rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontFamily: 'inherit', color: '#475569', backgroundColor: '#fff', outline: 'none', boxSizing: 'border-box' }}
+                            onChange={e => updateLabel(el.id, e.target.value)}
+                            placeholder="Label this slot (e.g. Hero Headline)"
+                            style={{ display: 'block', marginTop: '0.4rem', width: '100%', padding: '0.3rem 0.5rem', fontSize: '0.78rem', border: '1px solid #e2e8f0', borderRadius: '6px', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', color: '#475569', backgroundColor: '#fff' }}
                           />
                         )}
                       </div>
@@ -424,28 +362,84 @@ export default function WebsiteAnalyzer() {
               </div>
             </div>
 
-            {/* Generate button */}
             <button
               onClick={handleGenerate}
-              disabled={!selectedElements.length || saving}
-              style={{ width: '100%', padding: '1rem', backgroundColor: (!selectedElements.length || saving) ? '#e2e8f0' : 'var(--primary-color)', color: (!selectedElements.length || saving) ? '#94a3b8' : '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '1rem', cursor: (!selectedElements.length || saving) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', transition: 'background-color 0.2s' }}
+              disabled={!selected.length || generating}
+              style={{ width: '100%', padding: '1rem', backgroundColor: !selected.length || generating ? '#e2e8f0' : 'var(--primary-color)', color: !selected.length || generating ? '#94a3b8' : '#fff', border: 'none', borderRadius: '12px', fontWeight: 700, fontSize: '1rem', cursor: !selected.length || generating ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
             >
-              {saving
-                ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Locking in selections…</>
-                : `Generate variants for ${selectedElements.length || '…'} selected element${selectedElements.length !== 1 ? 's' : ''} →`
-              }
+              {generating
+                ? <><Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} /> Starting generation…</>
+                : `Generate copy for ${selected.length} element${selected.length !== 1 ? 's' : ''} × all segments →`}
             </button>
-
-            <p style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.875rem' }}>
-              The Worker Agent will write personalised copy for each segment. Your script tag automatically switches to personalisation mode — no re-paste needed.
+            <p style={{ textAlign: 'center', fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '0.75rem' }}>
+              The Worker Agent writes copy in the background. You'll get your script tag immediately.
             </p>
+          </>
+        )}
+
+        {/* ══ STEP 3: Integration ══ */}
+        {step === 'integration' && (
+          <>
+            <div style={{ backgroundColor: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '0.875rem 1.25rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <Check size={16} color="#16a34a" />
+              <span style={{ fontSize: '0.875rem', color: '#15803d' }}>
+                <strong>{confirmedSlots.length} elements</strong> locked in. Variants are generating in the background — usually ready in 20–40 seconds.
+              </span>
+            </div>
+
+            {/* Summary of what's being personalised */}
+            <div style={{ ...card, marginBottom: '1.5rem' }}>
+              <h3 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '0.875rem' }}>Elements being personalised</h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {confirmedSlots.map(s => (
+                  <div key={s.label} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.5rem 0.75rem', backgroundColor: '#fafafa', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+                    <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--primary-color)', minWidth: '140px' }}>{s.label}</span>
+                    <code style={{ fontSize: '0.72rem', color: '#94a3b8' }}>{s.selector}</code>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Integration code panel */}
+            <div style={{ backgroundColor: '#0f172a', borderRadius: '16px', overflow: 'hidden' }}>
+              <div style={{ padding: '1.5rem 1.75rem 0' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, color: '#f8fafc', marginBottom: '0.25rem' }}>Add to Your Website</h3>
+                <p style={{ fontSize: '0.82rem', color: '#64748b', marginBottom: '1rem' }}>
+                  Visitors are matched to their segment in under 100ms. Defaults always show if no match is found.
+                </p>
+                <div style={{ display: 'flex', borderBottom: '1px solid #1e293b' }}>
+                  {[['html','HTML / Any Platform'],['react','React / Next.js']].map(([t, label]) => (
+                    <button key={t} onClick={() => setIntegrationTab(t)} style={{ padding: '0.5rem 1rem', border: 'none', background: 'none', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, color: integrationTab === t ? '#a78bfa' : '#64748b', borderBottom: `2px solid ${integrationTab === t ? '#a78bfa' : 'transparent'}`, transition: 'all 0.15s' }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ padding: '1.5rem 1.75rem' }}>
+                {integrationTab === 'html' && (
+                  <>
+                    <p style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                      Paste once in <code style={{ color: '#a78bfa' }}>&lt;head&gt;</code>. Works on Webflow, WordPress, Squarespace, or any HTML site. No other changes needed.
+                    </p>
+                    <CodeBlock code={htmlScript} />
+                  </>
+                )}
+                {integrationTab === 'react' && (
+                  <>
+                    <p style={{ fontSize: '0.78rem', color: '#64748b', marginBottom: '0.5rem' }}>
+                      Drop the hook into your project. Your CSS selectors are pre-filled — use <code style={{ color: '#a78bfa' }}>slots?.['Label Name']</code> to render personalised copy with a fallback.
+                    </p>
+                    <CodeBlock code={reactScript} />
+                  </>
+                )}
+              </div>
+            </div>
           </>
         )}
       </main>
 
-      <style>{`
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
+      <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 }
