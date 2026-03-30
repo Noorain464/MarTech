@@ -11,6 +11,19 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: true
+  },
+  isOnboarded: {
+    type: Boolean,
+    default: false
+  },
+  onboardingData: {
+    role: String,
+    primaryGoal: [String],
+    businessType: String,
+    teamSize: String,
+    referralSource: String,
+    companyName: String,
+    companySize: String
   }
 }, { timestamps: true });
 

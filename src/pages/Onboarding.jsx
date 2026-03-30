@@ -53,6 +53,21 @@ const questions = [
       "LinkedIn", "A colleague / referral", "Google search",
       "Newsletter", "Podcast", "Event / hackathon", "Other"
     ]
+  },
+  {
+    id: 'companyName',
+    question: "What's the name of your company?",
+    description: "Your team workspace will be named after this.",
+    type: 'text'
+  },
+  {
+    id: 'companySize',
+    question: "What's your company size?",
+    description: "Helps us understand your scale.",
+    type: 'single',
+    options: [
+      "Self-employed / Solo", "1-10 employees", "11-50 employees", "51-200 employees", "201-500 employees", "500+ employees"
+    ]
   }
 ];
 
@@ -63,7 +78,9 @@ const Onboarding = () => {
     primaryGoal: [],
     businessType: '',
     teamSize: '',
-    referralSource: ''
+    referralSource: '',
+    companyName: '',
+    companySize: ''
   });
   const [saving, setSaving] = useState(false);
 
@@ -181,17 +198,48 @@ const Onboarding = () => {
               )}
               {!currentQ.description && <div style={{ marginBottom: '2rem' }} />}
 
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
-                {currentQ.options.map((opt) => (
-                  <Button
-                    key={opt}
-                    variant={isSelected(opt) ? 'pill-active' : 'pill'}
-                    onClick={() => handleSelect(opt)}
-                  >
-                    {opt}
-                  </Button>
-                ))}
-              </div>
+              {currentQ.type === 'text' ? (
+                <div style={{ width: '100%' }}>
+                  <input
+                    type="text"
+                    value={answers[currentQ.id]}
+                    onChange={(e) => setAnswers({ ...answers, [currentQ.id]: e.target.value })}
+                    placeholder="Type your answer here..."
+                    style={{
+                      width: '100%',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border-color)',
+                      backgroundColor: 'rgba(255, 255, 255, 0.03)',
+                      color: 'var(--text-main)',
+                      fontSize: '1.1rem',
+                      outline: 'none',
+                      transition: 'border-color 0.2s',
+                      boxSizing: 'border-box'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = 'var(--primary-color)'}
+                    onBlur={(e) => e.target.style.borderColor = 'var(--border-color)'}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' && answers[currentQ.id].trim() !== '') {
+                        handleNext();
+                      }
+                    }}
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.65rem' }}>
+                  {currentQ.options.map((opt) => (
+                    <Button
+                      key={opt}
+                      variant={isSelected(opt) ? 'pill-active' : 'pill'}
+                      onClick={() => handleSelect(opt)}
+                    >
+                      {opt}
+                    </Button>
+                  ))}
+                </div>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>

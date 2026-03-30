@@ -68,4 +68,30 @@ router.post('/signin', async (req, res) => {
   }
 });
 
+// @route   POST /api/auth/onboarding
+router.post('/onboarding', protect, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id);
+
+    if (user) {
+      user.isOnboarded = true;
+      user.onboardingData = req.body;
+
+      const updatedUser = await user.save();
+      res.json({
+        _id: updatedUser._id,
+        email: updatedUser.email,
+        isOnboarded: updatedUser.isOnboarded,
+        onboardingData: updatedUser.onboardingData,
+        token: generateToken(updatedUser._id)
+      });
+    } else {
+      res.status(404).json({ message: 'User not found' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error during onboarding' });
+  }
+});
+
 export default router;
