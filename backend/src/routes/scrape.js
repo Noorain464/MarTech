@@ -155,7 +155,7 @@ async function runScrapeAgent(url) {
   ];
 
   // Max 5 turns to prevent infinite loops
-  for (let turn = 0; turn < 5; turn++) {
+  for (let turn = 0; turn < 8; turn++) {
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 4096,
