@@ -14,7 +14,15 @@ function PersonalizationModal({ onClose, user }) {
   const [messages, setMessages] = useState(() => {
     try {
       const stored = localStorage.getItem(chatKey);
-      return stored ? JSON.parse(stored) : [];
+      if (!stored) return [];
+      const parsed = JSON.parse(stored);
+      // Discard stored chat if it ends with an error or empty assistant message
+      const last = parsed[parsed.length - 1];
+      if (last?.role === 'assistant' && (!last.content || last.content.includes('went wrong'))) {
+        localStorage.removeItem(chatKey);
+        return [];
+      }
+      return parsed;
     } catch { return []; }
   });
 
@@ -130,11 +138,27 @@ function PersonalizationModal({ onClose, user }) {
     if (!trimmed || isStreaming) return;
 
     const userMsg = { role: 'user', content: trimmed };
+
+    // Build clean history: exclude empty placeholders and error messages,
+    // then deduplicate consecutive same-role entries (keeps last one)
+    const cleanHistory = messages
+      .filter((m) => m.content && m.content.trim() && m.content !== 'Sorry, something went wrong. Please try again.')
+      .reduce((acc, m) => {
+        if (acc.length > 0 && acc[acc.length - 1].role === m.role) {
+          acc[acc.length - 1] = m; // replace with the later one
+        } else {
+          acc.push(m);
+        }
+        return acc;
+      }, []);
+
     const newMessages = [...messages, userMsg];
+    const historyForApi = [...cleanHistory, userMsg].map((m) => ({ role: m.role, content: m.content }));
+
     setMessages(newMessages);
     setInput('');
 
-    sendToAgent(newMessages.map((m) => ({ role: m.role, content: m.content })));
+    sendToAgent(historyForApi);
   };
 
   const handleKeyDown = (e) => {

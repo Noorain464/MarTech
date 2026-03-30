@@ -74,13 +74,28 @@ router.post('/chat', protect, async (req, res) => {
       apiKey: process.env.ANTHROPIC_API_KEY,
     });
 
-    const resolvedMessages = messages.length === 0
-      ? [{ role: 'user', content: 'Hello, ready to start.' }]
-      : messages;
+    // Sanitize: remove empty messages and collapse consecutive same-role entries
+    const sanitized = messages
+      .filter((m) => m.content && m.content.trim())
+      .reduce((acc, m) => {
+        if (acc.length > 0 && acc[acc.length - 1].role === m.role) {
+          acc[acc.length - 1] = m;
+        } else {
+          acc.push(m);
+        }
+        return acc;
+      }, []);
 
+    const resolvedMessages = sanitized.length === 0
+      ? [{ role: 'user', content: 'Hello, ready to start.' }]
+      : sanitized;
+
+    // Flush SSE headers immediately — must happen before any await in Express 5
+    // otherwise Express 5's async error handler intercepts and sends a 500 first
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.flushHeaders();
 
     const stream = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
@@ -118,7 +133,7 @@ router.post('/chat', protect, async (req, res) => {
     res.end();
 
   } catch (error) {
-    console.error('Agent chat error:', error);
+    console.error('Agent chat error:', error?.message);
     if (!res.headersSent) {
       res.status(500).json({ message: 'Error communicating with Agent API' });
     } else {
