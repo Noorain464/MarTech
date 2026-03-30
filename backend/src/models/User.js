@@ -12,7 +12,6 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-<<<<<<< HEAD
   isOnboarded: {
     type: Boolean,
     default: false
@@ -25,7 +24,7 @@ const userSchema = new mongoose.Schema({
     referralSource: String,
     companyName: String,
     companySize: String
-=======
+  },
   agentProfile: {
     type: mongoose.Schema.Types.Mixed,
     default: null
@@ -33,7 +32,6 @@ const userSchema = new mongoose.Schema({
   isProfileComplete: {
     type: Boolean,
     default: false
->>>>>>> f3efbdc (Setup Agent)
   }
 }, { timestamps: true });
 

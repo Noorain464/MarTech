@@ -6,24 +6,19 @@ import authRoutes from './src/routes/auth.js';
 import agentRoutes from './src/routes/agent.js';
 import generateRoutes from './src/routes/generate.js';
 import variantsRoutes from './src/routes/variants.js';
+import analyzeRoutes from './src/routes/analyze.js';
 
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5001;
 
-// Middleware
-// Strip accidental trailing slashes from FRONTEND_URL to ensure exact CORS origin matching
 const allowedOrigins = [
   "http://localhost:5173",
   "https://mar-tech-teal.vercel.app"
 ];
 
 app.use(cors({
-<<<<<<< HEAD
-    origin: ["https://mar-tech-teal.vercel.app", "http://localhost:5173"],
-    credentials: true,
-=======
   origin: function (origin, callback) {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
@@ -32,27 +27,23 @@ app.use(cors({
     }
   },
   credentials: true
->>>>>>> f3efbdc (Setup Agent)
 }));
 app.use(express.json());
 
-// Database connection
 mongoose.connect(process.env.MONGO_URI)
-    .then(() => console.log('MongoDB connected successfully'))
-    .catch(err => console.error('MongoDB connection error:', err));
+  .then(() => console.log('MongoDB connected successfully'))
+  .catch(err => console.error('MongoDB connection error:', err));
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/generate', generateRoutes);
 app.use('/api/variants', variantsRoutes);
+app.use('/api/analyze', analyzeRoutes);
 
-// Base route
 app.get('/', (req, res) => {
-    res.send('API is running...');
+  res.send('API is running...');
 });
 
-// Start server
 app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on port ${PORT}`);
 });

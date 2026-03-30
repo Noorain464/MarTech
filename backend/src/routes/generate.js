@@ -37,7 +37,7 @@ router.post('/', protect, async (req, res) => {
 
     // ─── STEP 2: LOOP THROUGH EVERY SEGMENT ────────────────────────────────
     for (const [index, segment] of profile.segments.entries()) {
-      const slots = ['headline', 'subheadline', 'cta_text'];
+      const slots = req.body.slots?.length ? req.body.slots : ['headline', 'subheadline', 'cta_text'];
       const segmentId = toSegmentId(segment.name, index);
       const tone = profile.tone || 'professional and direct';
       const valueProps = profile.value_props.join(', ');
